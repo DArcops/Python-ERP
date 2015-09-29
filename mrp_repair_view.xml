@@ -193,7 +193,7 @@
                      <page string="Orden de Producion">
 <!--==========================VISTA LIBRO DENTRO PRINCIPAL=========================-->
                             <notebook>
-                                <page string="Datos de la Unidad">
+                                <!--<page string="Datos de la Unidad">
                                     <form string="Orden de producion" version="7.0">
                                     <group col="4">
                                         <field name="produccion_fecha" />
@@ -204,7 +204,7 @@
                                          <field name="produccion_cliente" />
                                     </group>
                                     </form>   
-                                </page>
+                                </page> -->
                                 <page string="Realizaron Actividades">
                                     <form string="Responsable" version="7.0">
                                     <group col="4">
