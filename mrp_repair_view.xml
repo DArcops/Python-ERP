@@ -76,22 +76,9 @@
                                 </group>               
                             </form>
                         </page>
-                        <page string="Entrega">
-                            <form string="Contacto Empresa" version="7.0">
-                            <h2>Entrega Cliente</h2>
-                                <group col="4">
-                                  <field name="clienteEntregaNombre" />
-
-                                </group>                
-                            <h2>Recibe Personal de la Empresa</h2>
-                                <group col="4">
-                                
-                                    <field name="empresaEntregaNombre" />
-                                </group>                                
-                            </form>
-                        </page>
+                     
                         <!--finaliza la primera parte del notebook propio -->  
-                    <page string="Operations">
+                    <page string="Inspeccion">
                         <field name="operations">
                             <form string="Operations" version="7.0">
                                 <notebook>
@@ -202,18 +189,7 @@
                             </tree>
                         </field>
                     </page>
-                    <page string="Extra Info">
-                        <group>
-                            <group>
-                                <field name="picking_id"/>
-                                <field name="invoice_id" context="{'form_view_ref': 'account.invoice_form'}"/>
-                                <field name="company_id" groups="base.group_multi_company" widget="selection"/>
-                            </group>
-                            <group>
-                                <field name="location_dest_id" attrs="{'required':[('deliver_bool','=', True)]}" groups="stock.group_locations"/>
-                            </group>
-                        </group>
-                    </page>
+                    
                      <page string="Orden de Producion">
 <!--==========================VISTA LIBRO DENTRO PRINCIPAL=========================-->
                             <notebook>
@@ -258,7 +234,33 @@
                                 </page>
                             </notebook>             
 <!--======================FIN VISTA LIBRO DENTRO PRINCIPAL=====================-->
-                        </page>     
+                        </page>    
+                           <page string="Entrega">
+                            <form string="Contacto Empresa" version="7.0">
+                            <h2>Entrega Cliente</h2>
+                                <group col="4">
+                                  <field name="clienteEntregaNombre" />
+
+                                </group>                
+                            <h2>Recibe Personal de la Empresa</h2>
+                                <group col="4">
+                                
+                                    <field name="empresaEntregaNombre" />
+                                </group>                                
+                            </form>
+                        </page> 
+                    <page string="Extra Info">
+                        <group>
+                            <group>
+                                <field name="picking_id"/>
+                                <field name="invoice_id" context="{'form_view_ref': 'account.invoice_form'}"/>
+                                <field name="company_id" groups="base.group_multi_company" widget="selection"/>
+                            </group>
+                            <group>
+                                <field name="location_dest_id" attrs="{'required':[('deliver_bool','=', True)]}" groups="stock.group_locations"/>
+                            </group>
+                        </group>
+                    </page>
                     <page string="Notes">
                         <field name="internal_notes" placeholder="Add internal notes..."/>
                         <field name="quotation_notes" placeholder="Add quotation notes..."/>
