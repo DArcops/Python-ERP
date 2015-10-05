@@ -11,7 +11,7 @@
     product_uom: product.product_uom_unit
     product_uos_qty: 1.0
 -
-  !record {model: mrp.repair, id: mrp_repair_rmrp1}:
+  !record {model: mrp.servicemc, id: mrp_servicemc_rmrp1}:
     address_id: base.res_partner_address_1
     guarantee_limit: !eval datetime.today().strftime("%Y-%m-%d")
     invoice_method: 'none'
@@ -32,7 +32,7 @@
         to_invoice: 1
         type: add
     fees_lines:
-      - name: 'Mouse repair fees'
+      - name: 'Mouse servicemc fees'
         product_id: product.product_product_11
         product_uom_qty: 1.0
         product_uom: product.product_uom_unit
@@ -52,10 +52,10 @@
     product_uom: product.product_uom_unit
     product_uos_qty: 1.0
 -
-  !record {model: mrp.repair, id: mrp_repair_rmrp0}:
+  !record {model: mrp.servicemc, id: mrp_servicemc_rmrp0}:
     address_id: base.res_partner_address_1
     guarantee_limit: !eval datetime.today().strftime("%Y-%m-%d")
-    invoice_method: 'after_repair'
+    invoice_method: 'after_servicemc'
     partner_invoice_id: base.res_partner_address_1
     location_dest_id: stock.stock_location_14
     location_id: stock.stock_location_14
@@ -73,7 +73,7 @@
         to_invoice: 1
         type: add
     fees_lines:
-      - name: 'Mouse Seagate repair fees'
+      - name: 'Mouse Seagate servicemc fees'
         product_id: product.product_product_12
         product_uom_qty: 1.0
         product_uom: product.product_uom_unit
@@ -93,10 +93,10 @@
     product_uom: product.product_uom_unit
     product_uos_qty: 1.0
 -
-  !record {model: mrp.repair, id: mrp_repair_rmrp2}:
+  !record {model: mrp.servicemc, id: mrp_servicemc_rmrp2}:
     address_id: base.res_partner_address_1
     guarantee_limit: !eval datetime.today().strftime("%Y-%m-%d")
-    invoice_method: 'b4repair'
+    invoice_method: 'b4servicemc'
     partner_invoice_id: base.res_partner_address_1
     location_dest_id: stock.stock_location_14
     location_id: stock.stock_location_14

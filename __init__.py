@@ -19,7 +19,7 @@
 #
 ##############################################################################
 
-import mrp_repair
+import mrp_servicemc
 import wizard
 import report
 

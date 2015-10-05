@@ -26,10 +26,10 @@ from dateutil.relativedelta import relativedelta
 from openerp.tools.translate import _
 import openerp.addons.decimal_precision as dp
 
-class mrp_repair(osv.osv):
-    _name = 'mrp.repair'
+class mrp_servicemc(osv.osv):
+    _name = 'mrp.servicemc'
     _inherit = 'mail.thread'
-    _description = 'Repair Order'
+    _description = 'servicemc Order'
 
     def _amount_untaxed(self, cr, uid, ids, field_name, arg, context=None):
         """ Calculates untaxed amount.
@@ -45,14 +45,14 @@ class mrp_repair(osv.osv):
         res = {}
         cur_obj = self.pool.get('res.currency')
 
-        for repair in self.browse(cr, uid, ids, context=context):
-            res[repair.id] = 0.0
-            for line in repair.operations:
-                res[repair.id] += line.price_subtotal
-            for line in repair.fees_lines:
-                res[repair.id] += line.price_subtotal
-            cur = repair.pricelist_id.currency_id
-            res[repair.id] = cur_obj.round(cr, uid, cur, res[repair.id])
+        for servicemc in self.browse(cr, uid, ids, context=context):
+            res[servicemc.id] = 0.0
+            for line in servicemc.operations:
+                res[servicemc.id] += line.price_subtotal
+            for line in servicemc.fees_lines:
+                res[servicemc.id] += line.price_subtotal
+            cur = servicemc.pricelist_id.currency_id
+            res[servicemc.id] = cur_obj.round(cr, uid, cur, res[servicemc.id])
         return res
 
     def _amount_tax(self, cr, uid, ids, field_name, arg, context=None):
@@ -65,21 +65,21 @@ class mrp_repair(osv.osv):
         #return {}.fromkeys(ids, 0)
         cur_obj = self.pool.get('res.currency')
         tax_obj = self.pool.get('account.tax')
-        for repair in self.browse(cr, uid, ids, context=context):
+        for servicemc in self.browse(cr, uid, ids, context=context):
             val = 0.0
-            cur = repair.pricelist_id.currency_id
-            for line in repair.operations:
+            cur = servicemc.pricelist_id.currency_id
+            for line in servicemc.operations:
                 #manage prices with tax included use compute_all instead of compute
                 if line.to_invoice:
-                    tax_calculate = tax_obj.compute_all(cr, uid, line.tax_id, line.price_unit, line.product_uom_qty, line.product_id, repair.partner_id)
+                    tax_calculate = tax_obj.compute_all(cr, uid, line.tax_id, line.price_unit, line.product_uom_qty, line.product_id, servicemc.partner_id)
                     for c in tax_calculate['taxes']:
                         val += c['amount']
-            for line in repair.fees_lines:
+            for line in servicemc.fees_lines:
                 if line.to_invoice:
-                    tax_calculate = tax_obj.compute_all(cr, uid, line.tax_id, line.price_unit, line.product_uom_qty,  line.product_id, repair.partner_id)
+                    tax_calculate = tax_obj.compute_all(cr, uid, line.tax_id, line.price_unit, line.product_uom_qty,  line.product_id, servicemc.partner_id)
                     for c in tax_calculate['taxes']:
                         val += c['amount']
-            res[repair.id] = cur_obj.round(cr, uid, cur, val)
+            res[servicemc.id] = cur_obj.round(cr, uid, cur, val)
         return res
 
     def _amount_total(self, cr, uid, ids, field_name, arg, context=None):
@@ -93,8 +93,8 @@ class mrp_repair(osv.osv):
         tax = self._amount_tax(cr, uid, ids, field_name, arg, context=context)
         cur_obj = self.pool.get('res.currency')
         for id in ids:
-            repair = self.browse(cr, uid, id, context=context)
-            cur = repair.pricelist_id.currency_id
+            servicemc = self.browse(cr, uid, id, context=context)
+            cur = servicemc.pricelist_id.currency_id
             res[id] = cur_obj.round(cr, uid, cur, untax.get(id, 0.0) + tax.get(id, 0.0))
         return res
 
@@ -109,11 +109,11 @@ class mrp_repair(osv.osv):
         return res
 
     def _get_lines(self, cr, uid, ids, context=None):
-        return self.pool['mrp.repair'].search(
+        return self.pool['mrp.servicemc'].search(
             cr, uid, [('operations', 'in', ids)], context=context)
 
     def _get_fee_lines(self, cr, uid, ids, context=None):
-        return self.pool['mrp.repair'].search(
+        return self.pool['mrp.servicemc'].search(
             cr, uid, [('fees_lines', 'in', ids)], context=context)
 
     _columns = {
@@ -127,68 +127,62 @@ class mrp_repair(osv.osv):
             ('draft','Quotation'),
             ('cancel','Cancelled'),
             ('confirmed','Confirmed'),
-            ('under_repair','Under Repair'),
-            ('ready','Ready to Repair'),
+            ('under_servicemc','Under servicemc'),
+            ('ready','Ready to servicemc'),
             ('2binvoiced','To be Invoiced'),
             ('invoice_except','Invoice Exception'),
-            ('done','Repaired')
+            ('done','servicemced')
             ], 'Status', readonly=True, track_visibility='onchange',
-            help=' * The \'Draft\' status is used when a user is encoding a new and unconfirmed repair order. \
-            \n* The \'Confirmed\' status is used when a user confirms the repair order. \
-            \n* The \'Ready to Repair\' status is used to start to repairing, user can start repairing only after repair order is confirmed. \
-            \n* The \'To be Invoiced\' status is used to generate the invoice before or after repairing done. \
-            \n* The \'Done\' status is set when repairing is completed.\
-            \n* The \'Cancelled\' status is used when user cancel repair order.'),
+            help=' * The \'Draft\' status is used when a user is encoding a new and unconfirmed servicemc order. \
+            \n* The \'Confirmed\' status is used when a user confirms the servicemc order. \
+            \n* The \'Ready to servicemc\' status is used to start to servicemcing, user can start servicemcing only after servicemc order is confirmed. \
+            \n* The \'To be Invoiced\' status is used to generate the invoice before or after servicemcing done. \
+            \n* The \'Done\' status is set when servicemcing is completed.\
+            \n* The \'Cancelled\' status is used when user cancel servicemc order.'),
         'location_id': fields.many2one('stock.location', 'Current Location', select=True, readonly=True, states={'draft':[('readonly',False)], 'confirmed':[('readonly',True)]}),
         'location_dest_id': fields.many2one('stock.location', 'Delivery Location', readonly=True, states={'draft':[('readonly',False)], 'confirmed':[('readonly',True)]}),
         'move_id': fields.many2one('stock.move', 'Move',required=True, domain="[('product_id','=',product_id)]", readonly=True, states={'draft':[('readonly',False)]}),
         'guarantee_limit': fields.date('fecha de Limite de Garantia', help="The warranty expiration limit is computed as: last move date + warranty defined on selected product. If the current date is below the warranty expiration limit, each operation and fee you will add will be set as 'not to invoiced' by default. Note that you can change manually afterwards.", states={'confirmed':[('readonly',True)]}),
-        'operations' : fields.one2many('mrp.repair.line', 'repair_id', 'Operation Lines', readonly=True, states={'draft':[('readonly',False)]}),
+        'operations' : fields.one2many('mrp.servicemc.line', 'servicemc_id', 'Operation Lines', readonly=True, states={'draft':[('readonly',False)]}),
         'pricelist_id': fields.many2one('product.pricelist', 'Pricelist', help='Pricelist of the selected partner.'),
         'partner_invoice_id':fields.many2one('res.partner', 'Invoicing Address'),
         'invoice_method':fields.selection([
             ("none","No Invoice"),
-            ("b4repair","Before Repair"),
-            ("after_repair","After Repair")
+            ("b4servicemc","Before servicemc"),
+            ("after_servicemc","After servicemc")
            ], "Invoice Method",
-            select=True, required=True, states={'draft':[('readonly',False)]}, readonly=True, help='Selecting \'Before Repair\' or \'After Repair\' will allow you to generate invoice before or after the repair is done respectively. \'No invoice\' means you don\'t want to generate invoice for this repair order.'),
+            select=True, required=True, states={'draft':[('readonly',False)]}, readonly=True, help='Selecting \'Before servicemc\' or \'After servicemc\' will allow you to generate invoice before or after the servicemc is done respectively. \'No invoice\' means you don\'t want to generate invoice for this servicemc order.'),
         'invoice_id': fields.many2one('account.invoice', 'Invoice', readonly=True),
         'picking_id': fields.many2one('stock.picking', 'Picking',readonly=True),
-        'fees_lines': fields.one2many('mrp.repair.fee', 'repair_id', 'Fees Lines', readonly=True, states={'draft':[('readonly',False)]}),
+        'fees_lines': fields.one2many('mrp.servicemc.fee', 'servicemc_id', 'Fees Lines', readonly=True, states={'draft':[('readonly',False)]}),
         'internal_notes': fields.text('Internal Notes'),
         'quotation_notes': fields.text('Quotation Notes'),
         'company_id': fields.many2one('res.company', 'Company'),
-        'deliver_bool': fields.boolean('Deliver', help="Check this box if you want to manage the delivery once the product is repaired and create a picking with selected product. Note that you can select the locations in the Info tab, if you have the extended view.", states={'confirmed':[('readonly',True)]}),
+        'deliver_bool': fields.boolean('Deliver', help="Check this box if you want to manage the delivery once the product is servicemced and create a picking with selected product. Note that you can select the locations in the Info tab, if you have the extended view.", states={'confirmed':[('readonly',True)]}),
         'invoiced': fields.boolean('Invoiced', readonly=True),
-        'repaired': fields.boolean('Repaired', readonly=True),
+        'servicemced': fields.boolean('servicemced', readonly=True),
         'amount_untaxed': fields.function(_amount_untaxed, string='Untaxed Amount',
             store={
-                'mrp.repair': (lambda self, cr, uid, ids, c={}: ids, ['operations', 'fees_lines'], 10),
-                'mrp.repair.line': (_get_lines, ['price_unit', 'price_subtotal', 'product_id', 'tax_id', 'product_uom_qty', 'product_uom'], 10),
-                'mrp.repair.fee': (_get_fee_lines, ['price_unit', 'price_subtotal', 'product_id', 'tax_id', 'product_uom_qty', 'product_uom'], 10),
+                'mrp.servicemc': (lambda self, cr, uid, ids, c={}: ids, ['operations', 'fees_lines'], 10),
+                'mrp.servicemc.line': (_get_lines, ['price_unit', 'price_subtotal', 'product_id', 'tax_id', 'product_uom_qty', 'product_uom'], 10),
+                'mrp.servicemc.fee': (_get_fee_lines, ['price_unit', 'price_subtotal', 'product_id', 'tax_id', 'product_uom_qty', 'product_uom'], 10),
             }),
         'amount_tax': fields.function(_amount_tax, string='Taxes',
             store={
-                'mrp.repair': (lambda self, cr, uid, ids, c={}: ids, ['operations', 'fees_lines'], 10),
-                'mrp.repair.line': (_get_lines, ['price_unit', 'price_subtotal', 'product_id', 'tax_id', 'product_uom_qty', 'product_uom'], 10),
-                'mrp.repair.fee': (_get_fee_lines, ['price_unit', 'price_subtotal', 'product_id', 'tax_id', 'product_uom_qty', 'product_uom'], 10),
+                'mrp.servicemc': (lambda self, cr, uid, ids, c={}: ids, ['operations', 'fees_lines'], 10),
+                'mrp.servicemc.line': (_get_lines, ['price_unit', 'price_subtotal', 'product_id', 'tax_id', 'product_uom_qty', 'product_uom'], 10),
+                'mrp.servicemc.fee': (_get_fee_lines, ['price_unit', 'price_subtotal', 'product_id', 'tax_id', 'product_uom_qty', 'product_uom'], 10),
             }),
         'amount_total': fields.function(_amount_total, string='Total',
             store={
-                'mrp.repair': (lambda self, cr, uid, ids, c={}: ids, ['operations', 'fees_lines'], 10),
-                'mrp.repair.line': (_get_lines, ['price_unit', 'price_subtotal', 'product_id', 'tax_id', 'product_uom_qty', 'product_uom'], 10),
-                'mrp.repair.fee': (_get_fee_lines, ['price_unit', 'price_subtotal', 'product_id', 'tax_id', 'product_uom_qty', 'product_uom'], 10),
+                'mrp.servicemc': (lambda self, cr, uid, ids, c={}: ids, ['operations', 'fees_lines'], 10),
+                'mrp.servicemc.line': (_get_lines, ['price_unit', 'price_subtotal', 'product_id', 'tax_id', 'product_uom_qty', 'product_uom'], 10),
+                'mrp.servicemc.fee': (_get_fee_lines, ['price_unit', 'price_subtotal', 'product_id', 'tax_id', 'product_uom_qty', 'product_uom'], 10),
             }),
         'clienteNombre': fields.many2one('res.partner','Nombre del Cliente', required= True),   
         'clienteEntregaNombre': fields.many2one('res.partner','Nombre del Cliente', required= True),    
         'empresaEntregaNombre': fields.many2one('hr.employee','Nombre'),    
         'empresaNombre': fields.many2one('hr.employee','Nombre Jefe de Area'),      
-        'produccion_fecha': fields.date('Fecha de la Orden', required = False),
-        'produccion_zona': fields.char('Zona', size = 60),
-        'produccion_divicion':fields.char('Divicion', size = 60),
-        'produccion_area': fields.char('Area', size = 60),
-        'produccion_atencion':fields.char('Atencion', size = 60),
-        'produccion_cliente': fields.many2one('res.partner','Cliente',required= False, help = 'Cliente al que se le hace el servicio'),
         'produccion_fecha_final':  fields.date('Fecha final', required = False),
         'produccion_notas': fields.text('Notas'),
         'produccion_re_ter_unidad': fields.many2one('hr.employee','Reporta Terminio de la Unidad', required=False), 
@@ -208,9 +202,9 @@ class mrp_repair(osv.osv):
     _defaults = {
         'state': lambda *a: 'draft',
         'deliver_bool': lambda *a: True,
-        'name': lambda obj, cr, uid, context: obj.pool.get('ir.sequence').get(cr, uid, 'mrp.repair'),
+        'name': lambda obj, cr, uid, context: obj.pool.get('ir.sequence').get(cr, uid, 'mrp.servicemc'),
         'invoice_method': lambda *a: 'none',
-        'company_id': lambda self, cr, uid, context: self.pool.get('res.company')._company_default_get(cr, uid, 'mrp.repair', context=context),
+        'company_id': lambda self, cr, uid, context: self.pool.get('res.company')._company_default_get(cr, uid, 'mrp.servicemc', context=context),
         'pricelist_id': lambda self, cr, uid,context : self.pool.get('product.pricelist').search(cr, uid, [('type','=','sale')])[0]
     }
 
@@ -219,13 +213,13 @@ class mrp_repair(osv.osv):
             default = {}
         default.update({
             'state':'draft',
-            'repaired':False,
+            'servicemced':False,
             'invoiced':False,
             'invoice_id': False,
             'picking_id': False,
-            'name': self.pool.get('ir.sequence').get(cr, uid, 'mrp.repair'),
+            'name': self.pool.get('ir.sequence').get(cr, uid, 'mrp.servicemc'),
         })
-        return super(mrp_repair, self).copy(cr, uid, id, default, context)
+        return super(mrp_servicemc, self).copy(cr, uid, id, default, context)
 
     def onchange_product_id(self, cr, uid, ids, product_id=None):
         """ On change of product sets some values.
@@ -333,30 +327,30 @@ class mrp_repair(osv.osv):
         return data
 
     def action_cancel_draft(self, cr, uid, ids, *args):
-        """ Cancels repair order when it is in 'Draft' state.
+        """ Cancels servicemc order when it is in 'Draft' state.
         @param *arg: Arguments
         @return: True
         """
         if not len(ids):
             return False
-        mrp_line_obj = self.pool.get('mrp.repair.line')
-        for repair in self.browse(cr, uid, ids):
-            mrp_line_obj.write(cr, uid, [l.id for l in repair.operations], {'state': 'draft'})
+        mrp_line_obj = self.pool.get('mrp.servicemc.line')
+        for servicemc in self.browse(cr, uid, ids):
+            mrp_line_obj.write(cr, uid, [l.id for l in servicemc.operations], {'state': 'draft'})
         self.write(cr, uid, ids, {'state':'draft'})
         wf_service = netsvc.LocalService("workflow")
         for id in ids:
-            wf_service.trg_create(uid, 'mrp.repair', id, cr)
+            wf_service.trg_create(uid, 'mrp.servicemc', id, cr)
         return True
 
     def action_confirm(self, cr, uid, ids, *args):
-        """ Repair order state is set to 'To be invoiced' when invoice method
-        is 'Before repair' else state becomes 'Confirmed'.
+        """ servicemc order state is set to 'To be invoiced' when invoice method
+        is 'Before servicemc' else state becomes 'Confirmed'.
         @param *arg: Arguments
         @return: True
         """
-        mrp_line_obj = self.pool.get('mrp.repair.line')
+        mrp_line_obj = self.pool.get('mrp.servicemc.line')
         for o in self.browse(cr, uid, ids):
-            if (o.invoice_method == 'b4repair'):
+            if (o.invoice_method == 'b4servicemc'):
                 self.write(cr, uid, [o.id], {'state': '2binvoiced'})
             else:
                 self.write(cr, uid, [o.id], {'state': 'confirmed'})
@@ -367,15 +361,15 @@ class mrp_repair(osv.osv):
         return True
 
     def action_cancel(self, cr, uid, ids, context=None):
-        """ Cancels repair order.
+        """ Cancels servicemc order.
         @return: True
         """
-        mrp_line_obj = self.pool.get('mrp.repair.line')
-        for repair in self.browse(cr, uid, ids, context=context):
-            if not repair.invoiced:
-                mrp_line_obj.write(cr, uid, [l.id for l in repair.operations], {'state': 'cancel'}, context=context)
+        mrp_line_obj = self.pool.get('mrp.servicemc.line')
+        for servicemc in self.browse(cr, uid, ids, context=context):
+            if not servicemc.invoiced:
+                mrp_line_obj.write(cr, uid, [l.id for l in servicemc.operations], {'state': 'cancel'}, context=context)
             else:
-                raise osv.except_osv(_('Warning!'),_('Repair order is already invoiced.'))
+                raise osv.except_osv(_('Warning!'),_('servicemc order is already invoiced.'))
         return self.write(cr,uid,ids,{'state':'cancel'})
 
     def wkf_invoice_create(self, cr, uid, ids, *args):
@@ -383,7 +377,7 @@ class mrp_repair(osv.osv):
         return True
 
     def action_invoice_create(self, cr, uid, ids, group=False, context=None):
-        """ Creates invoice(s) for repair order.
+        """ Creates invoice(s) for servicemc order.
         @param group: It is set to true when group invoice is to be generated.
         @return: Invoice Ids.
         """
@@ -391,47 +385,47 @@ class mrp_repair(osv.osv):
         invoices_group = {}
         inv_line_obj = self.pool.get('account.invoice.line')
         inv_obj = self.pool.get('account.invoice')
-        repair_line_obj = self.pool.get('mrp.repair.line')
-        repair_fee_obj = self.pool.get('mrp.repair.fee')
-        for repair in self.browse(cr, uid, ids, context=context):
-            res[repair.id] = False
-            if repair.state in ('draft','cancel') or repair.invoice_id:
+        servicemc_line_obj = self.pool.get('mrp.servicemc.line')
+        servicemc_fee_obj = self.pool.get('mrp.servicemc.fee')
+        for servicemc in self.browse(cr, uid, ids, context=context):
+            res[servicemc.id] = False
+            if servicemc.state in ('draft','cancel') or servicemc.invoice_id:
                 continue
-            if not (repair.partner_id.id and repair.partner_invoice_id.id):
-                raise osv.except_osv(_('No partner!'),_('You have to select a Partner Invoice Address in the repair form!'))
-            comment = repair.quotation_notes
-            if (repair.invoice_method != 'none'):
-                if group and repair.partner_invoice_id.id in invoices_group:
-                    inv_id = invoices_group[repair.partner_invoice_id.id]
+            if not (servicemc.partner_id.id and servicemc.partner_invoice_id.id):
+                raise osv.except_osv(_('No partner!'),_('You have to select a Partner Invoice Address in the servicemc form!'))
+            comment = servicemc.quotation_notes
+            if (servicemc.invoice_method != 'none'):
+                if group and servicemc.partner_invoice_id.id in invoices_group:
+                    inv_id = invoices_group[servicemc.partner_invoice_id.id]
                     invoice = inv_obj.browse(cr, uid, inv_id)
                     invoice_vals = {
-                        'name': invoice.name +', '+repair.name,
-                        'origin': invoice.origin+', '+repair.name,
+                        'name': invoice.name +', '+servicemc.name,
+                        'origin': invoice.origin+', '+servicemc.name,
                         'comment':(comment and (invoice.comment and invoice.comment+"\n"+comment or comment)) or (invoice.comment and invoice.comment or ''),
                     }
                     inv_obj.write(cr, uid, [inv_id], invoice_vals, context=context)
                 else:
-                    if not repair.partner_id.property_account_receivable:
-                        raise osv.except_osv(_('Error!'), _('No account defined for partner "%s".') % repair.partner_id.name )
-                    account_id = repair.partner_id.property_account_receivable.id
+                    if not servicemc.partner_id.property_account_receivable:
+                        raise osv.except_osv(_('Error!'), _('No account defined for partner "%s".') % servicemc.partner_id.name )
+                    account_id = servicemc.partner_id.property_account_receivable.id
                     inv = {
-                        'name': repair.name,
-                        'origin':repair.name,
+                        'name': servicemc.name,
+                        'origin':servicemc.name,
                         'type': 'out_invoice',
                         'account_id': account_id,
-                        'partner_id': repair.partner_invoice_id.id or repair.partner_id.id,
-                        'currency_id': repair.pricelist_id.currency_id.id,
-                        'comment': repair.quotation_notes,
-                        'fiscal_position': repair.partner_id.property_account_position.id
+                        'partner_id': servicemc.partner_invoice_id.id or servicemc.partner_id.id,
+                        'currency_id': servicemc.pricelist_id.currency_id.id,
+                        'comment': servicemc.quotation_notes,
+                        'fiscal_position': servicemc.partner_id.property_account_position.id
                     }
                     inv_id = inv_obj.create(cr, uid, inv)
-                    invoices_group[repair.partner_invoice_id.id] = inv_id
-                self.write(cr, uid, repair.id, {'invoiced': True, 'invoice_id': inv_id})
+                    invoices_group[servicemc.partner_invoice_id.id] = inv_id
+                self.write(cr, uid, servicemc.id, {'invoiced': True, 'invoice_id': inv_id})
 
-                for operation in repair.operations:
+                for operation in servicemc.operations:
                     if operation.to_invoice == True:
                         if group:
-                            name = repair.name + '-' + operation.name
+                            name = servicemc.name + '-' + operation.name
                         else:
                             name = operation.name
 
@@ -445,7 +439,7 @@ class mrp_repair(osv.osv):
                         invoice_line_id = inv_line_obj.create(cr, uid, {
                             'invoice_id': inv_id,
                             'name': name,
-                            'origin': repair.name,
+                            'origin': servicemc.name,
                             'account_id': account_id,
                             'quantity': operation.product_uom_qty,
                             'invoice_line_tax_id': [(6,0,[x.id for x in operation.tax_id])],
@@ -454,11 +448,11 @@ class mrp_repair(osv.osv):
                             'price_subtotal': operation.product_uom_qty*operation.price_unit,
                             'product_id': operation.product_id and operation.product_id.id or False
                         })
-                        repair_line_obj.write(cr, uid, [operation.id], {'invoiced': True, 'invoice_line_id': invoice_line_id})
-                for fee in repair.fees_lines:
+                        servicemc_line_obj.write(cr, uid, [operation.id], {'invoiced': True, 'invoice_line_id': invoice_line_id})
+                for fee in servicemc.fees_lines:
                     if fee.to_invoice == True:
                         if group:
-                            name = repair.name + '-' + fee.name
+                            name = servicemc.name + '-' + fee.name
                         else:
                             name = fee.name
                         if not fee.product_id:
@@ -474,7 +468,7 @@ class mrp_repair(osv.osv):
                         invoice_fee_id = inv_line_obj.create(cr, uid, {
                             'invoice_id': inv_id,
                             'name': name,
-                            'origin': repair.name,
+                            'origin': servicemc.name,
                             'account_id': account_id,
                             'quantity': fee.product_uom_qty,
                             'invoice_line_tax_id': [(6,0,[x.id for x in fee.tax_id])],
@@ -483,70 +477,70 @@ class mrp_repair(osv.osv):
                             'price_unit': fee.price_unit,
                             'price_subtotal': fee.product_uom_qty*fee.price_unit
                         })
-                        repair_fee_obj.write(cr, uid, [fee.id], {'invoiced': True, 'invoice_line_id': invoice_fee_id})
-                res[repair.id] = inv_id
+                        servicemc_fee_obj.write(cr, uid, [fee.id], {'invoiced': True, 'invoice_line_id': invoice_fee_id})
+                res[servicemc.id] = inv_id
         return res
 
-    def action_repair_ready(self, cr, uid, ids, context=None):
-        """ Writes repair order state to 'Ready'
+    def action_servicemc_ready(self, cr, uid, ids, context=None):
+        """ Writes servicemc order state to 'Ready'
         @return: True
         """
-        for repair in self.browse(cr, uid, ids, context=context):
-            self.pool.get('mrp.repair.line').write(cr, uid, [l.id for
-                    l in repair.operations], {'state': 'confirmed'}, context=context)
-            self.write(cr, uid, [repair.id], {'state': 'ready'})
+        for servicemc in self.browse(cr, uid, ids, context=context):
+            self.pool.get('mrp.servicemc.line').write(cr, uid, [l.id for
+                    l in servicemc.operations], {'state': 'confirmed'}, context=context)
+            self.write(cr, uid, [servicemc.id], {'state': 'ready'})
         return True
 
-    def action_repair_start(self, cr, uid, ids, context=None):
-        """ Writes repair order state to 'Under Repair'
+    def action_servicemc_start(self, cr, uid, ids, context=None):
+        """ Writes servicemc order state to 'Under servicemc'
         @return: True
         """
-        repair_line = self.pool.get('mrp.repair.line')
-        for repair in self.browse(cr, uid, ids, context=context):
-            repair_line.write(cr, uid, [l.id for
-                    l in repair.operations], {'state': 'confirmed'}, context=context)
-            repair.write({'state': 'under_repair'})
+        servicemc_line = self.pool.get('mrp.servicemc.line')
+        for servicemc in self.browse(cr, uid, ids, context=context):
+            servicemc_line.write(cr, uid, [l.id for
+                    l in servicemc.operations], {'state': 'confirmed'}, context=context)
+            servicemc.write({'state': 'under_servicemc'})
         return True
 
-    def action_repair_end(self, cr, uid, ids, context=None):
-        """ Writes repair order state to 'To be invoiced' if invoice method is
-        After repair else state is set to 'Ready'.
+    def action_servicemc_end(self, cr, uid, ids, context=None):
+        """ Writes servicemc order state to 'To be invoiced' if invoice method is
+        After servicemc else state is set to 'Ready'.
         @return: True
         """
         for order in self.browse(cr, uid, ids, context=context):
             val = {}
-            val['repaired'] = True
-            if (not order.invoiced and order.invoice_method=='after_repair'):
+            val['servicemced'] = True
+            if (not order.invoiced and order.invoice_method=='after_servicemc'):
                 val['state'] = '2binvoiced'
-            elif (not order.invoiced and order.invoice_method=='b4repair'):
+            elif (not order.invoiced and order.invoice_method=='b4servicemc'):
                 val['state'] = 'ready'
             else:
                 pass
             self.write(cr, uid, [order.id], val)
         return True
 
-    def wkf_repair_done(self, cr, uid, ids, *args):
-        self.action_repair_done(cr, uid, ids)
+    def wkf_servicemc_done(self, cr, uid, ids, *args):
+        self.action_servicemc_done(cr, uid, ids)
         return True
 
-    def action_repair_done(self, cr, uid, ids, context=None):
-        """ Creates stock move and picking for repair order.
+    def action_servicemc_done(self, cr, uid, ids, context=None):
+        """ Creates stock move and picking for servicemc order.
         @return: Picking ids.
         """
         res = {}
         move_obj = self.pool.get('stock.move')
         wf_service = netsvc.LocalService("workflow")
-        repair_line_obj = self.pool.get('mrp.repair.line')
+        servicemc_line_obj = self.pool.get('mrp.servicemc.line')
         seq_obj = self.pool.get('ir.sequence')
         pick_obj = self.pool.get('stock.picking')
-        for repair in self.browse(cr, uid, ids, context=context):
-            for move in repair.operations:
+        for servicemc in self.browse(cr, uid, ids, context=context):
+            for move in servicemc.operations:
                 move_id = move_obj.create(cr, uid, {
                     'name': move.name,
                     'product_id': move.product_id.id,
                     'product_qty': move.product_uom_qty,
                     'product_uom': move.product_uom.id,
-                    'partner_id': repair.address_id and repair.address_id.id or False,
+                    'partner_id': servicemc.address_id and servicemc.address_id.id or False,
                     'location_id': move.location_id.id,
                     'location_dest_id': move.location_dest_id.id,
                     'tracking_id': False,
@@ -554,36 +548,36 @@ class mrp_repair(osv.osv):
                     'state': 'assigned',
                 })
                 move_obj.action_done(cr, uid, [move_id], context=context)
-                repair_line_obj.write(cr, uid, [move.id], {'move_id': move_id, 'state': 'done'}, context=context)
-            if repair.deliver_bool:
+                servicemc_line_obj.write(cr, uid, [move.id], {'move_id': move_id, 'state': 'done'}, context=context)
+            if servicemc.deliver_bool:
                 pick_name = seq_obj.get(cr, uid, 'stock.picking.out')
                 picking = pick_obj.create(cr, uid, {
                     'name': pick_name,
-                    'origin': repair.name,
+                    'origin': servicemc.name,
                     'state': 'draft',
                     'move_type': 'one',
-                    'partner_id': repair.address_id and repair.address_id.id or False,
-                    'note': repair.internal_notes,
+                    'partner_id': servicemc.address_id and servicemc.address_id.id or False,
+                    'note': servicemc.internal_notes,
                     'invoice_state': 'none',
                     'type': 'out',
                 })
                 move_id = move_obj.create(cr, uid, {
-                    'name': repair.name,
+                    'name': servicemc.name,
                     'picking_id': picking,
-                    'product_id': repair.product_id.id,
-                    'product_uom': repair.product_id.uom_id.id,
-                    'prodlot_id': repair.prodlot_id and repair.prodlot_id.id or False,
-                    'partner_id': repair.address_id and repair.address_id.id or False,
-                    'location_id': repair.location_id.id,
-                    'location_dest_id': repair.location_dest_id.id,
+                    'product_id': servicemc.product_id.id,
+                    'product_uom': servicemc.product_id.uom_id.id,
+                    'prodlot_id': servicemc.prodlot_id and servicemc.prodlot_id.id or False,
+                    'partner_id': servicemc.address_id and servicemc.address_id.id or False,
+                    'location_id': servicemc.location_id.id,
+                    'location_dest_id': servicemc.location_dest_id.id,
                     'tracking_id': False,
                     'state': 'assigned',
                 })
                 wf_service.trg_validate(uid, 'stock.picking', picking, 'button_confirm', cr)
-                self.write(cr, uid, [repair.id], {'state': 'done', 'picking_id': picking})
-                res[repair.id] = picking
+                self.write(cr, uid, [servicemc.id], {'state': 'done', 'picking_id': picking})
+                res[servicemc.id] = picking
             else:
-                self.write(cr, uid, [repair.id], {'state': 'done'})
+                self.write(cr, uid, [servicemc.id], {'state': 'done'})
         return res
 
 
@@ -621,7 +615,7 @@ class ProductChangeMixin(object):
                 warning = {
                     'title':'No Pricelist!',
                     'message':
-                        'You have to select a pricelist in the Repair form !\n'
+                        'You have to select a pricelist in the servicemc form !\n'
                         'Please set one before choosing a product.'
                 }
             else:
@@ -641,14 +635,14 @@ class ProductChangeMixin(object):
         return {'value': result, 'warning': warning}
 
 
-class mrp_repair_line(osv.osv, ProductChangeMixin):
-    _name = 'mrp.repair.line'
-    _description = 'Repair Line'
+class mrp_servicemc_line(osv.osv, ProductChangeMixin):
+    _name = 'mrp.servicemc.line'
+    _description = 'servicemc Line'
 
     def copy_data(self, cr, uid, id, default=None, context=None):
         if not default: default = {}
         default.update( {'invoice_line_id': False, 'move_id': False, 'invoiced': False, 'state': 'draft'})
-        return super(mrp_repair_line, self).copy_data(cr, uid, id, default, context)
+        return super(mrp_servicemc_line, self).copy_data(cr, uid, id, default, context)
 
     def _amount_line(self, cr, uid, ids, field_name, arg, context=None):
         """ Calculates amount.
@@ -660,17 +654,17 @@ class mrp_repair_line(osv.osv, ProductChangeMixin):
         cur_obj=self.pool.get('res.currency')
         for line in self.browse(cr, uid, ids, context=context):
             res[line.id] = line.to_invoice and line.price_unit * line.product_uom_qty or 0
-            cur = line.repair_id.pricelist_id
+            cur = line.servicemc_id.pricelist_id
     _columns = {
         'name' : fields.char('Description',size=64,required=True),
-        'repair_id': fields.many2one('mrp.repair', 'Repair Order Reference',ondelete='cascade', select=True),
+        'servicemc_id': fields.many2one('mrp.servicemc', 'servicemc Order Reference',ondelete='cascade', select=True),
         'type': fields.selection([('add','Add'),('remove','Remove')],'Type', required=True),
         'to_invoice': fields.boolean('To Invoice'),
         'product_id': fields.many2one('product.product', 'Product', required=True),
         'invoiced': fields.boolean('Invoiced',readonly=True),
         'price_unit': fields.float('Unit Price', required=True, digits_compute= dp.get_precision('Product Price')),
         'price_subtotal': fields.function(_amount_line, string='Subtotal',digits_compute= dp.get_precision('Account')),
-        'tax_id': fields.many2many('account.tax', 'repair_operation_line_tax', 'repair_operation_line_id', 'tax_id', 'Taxes'),
+        'tax_id': fields.many2many('account.tax', 'servicemc_operation_line_tax', 'servicemc_operation_line_id', 'tax_id', 'Taxes'),
         'product_uom_qty': fields.float('Quantity', digits_compute= dp.get_precision('Product Unit of Measure'), required=True),
         'product_uom': fields.many2one('product.uom', 'Product Unit of Measure', required=True),
         'prodlot_id': fields.many2one('stock.production.lot', 'Lot Number',domain="[('product_id','=',product_id)]"),
@@ -683,10 +677,10 @@ class mrp_repair_line(osv.osv, ProductChangeMixin):
                     ('confirmed','Confirmed'),
                     ('done','Done'),
                     ('cancel','Cancelled')], 'Status', required=True, readonly=True,
-                    help=' * The \'Draft\' status is set automatically as draft when repair order in draft status. \
-                        \n* The \'Confirmed\' status is set automatically as confirm when repair order in confirm status. \
-                        \n* The \'Done\' status is set automatically when repair order is completed.\
-                        \n* The \'Cancelled\' status is set automatically when user cancel repair order.'),
+                    help=' * The \'Draft\' status is set automatically as draft when servicemc order in draft status. \
+                        \n* The \'Confirmed\' status is set automatically as confirm when servicemc order in confirm status. \
+                        \n* The \'Done\' status is set automatically when servicemc order is completed.\
+                        \n* The \'Cancelled\' status is set automatically when user cancel servicemc order.'),
     }
     _defaults = {
      'state': lambda *a: 'draft',
@@ -712,7 +706,7 @@ class mrp_repair_line(osv.osv, ProductChangeMixin):
 
         if type == 'add':
             # TOCHECK: Find stock location for user's company warehouse or
-            # repair order's company's warehouse (company_id field is added in fix of lp:831583)
+            # servicemc order's company's warehouse (company_id field is added in fix of lp:831583)
             args = company_id and [('company_id', '=', company_id)] or []
             warehouse_ids = warehouse_obj.search(cr, uid, args, context=context)
             stock_id = False
@@ -733,16 +727,16 @@ class mrp_repair_line(osv.osv, ProductChangeMixin):
                 'location_dest_id': scrap_location_ids and scrap_location_ids[0] or False,
                 }}
 
-mrp_repair_line()
+mrp_servicemc_line()
 
-class mrp_repair_fee(osv.osv, ProductChangeMixin):
-    _name = 'mrp.repair.fee'
-    _description = 'Repair Fees Line'
+class mrp_servicemc_fee(osv.osv, ProductChangeMixin):
+    _name = 'mrp.servicemc.fee'
+    _description = 'servicemc Fees Line'
 
     def copy_data(self, cr, uid, id, default=None, context=None):
         if not default: default = {}
         default.update({'invoice_line_id': False, 'invoiced': False})
-        return super(mrp_repair_fee, self).copy_data(cr, uid, id, default, context)
+        return super(mrp_servicemc_fee, self).copy_data(cr, uid, id, default, context)
 
     def _amount_line(self, cr, uid, ids, field_name, arg, context=None):
         """ Calculates amount.
@@ -754,19 +748,19 @@ class mrp_repair_fee(osv.osv, ProductChangeMixin):
         cur_obj = self.pool.get('res.currency')
         for line in self.browse(cr, uid, ids, context=context):
             res[line.id] = line.to_invoice and line.price_unit * line.product_uom_qty or 0
-            cur = line.repair_id.pricelist_id.currency_id
+            cur = line.servicemc_id.pricelist_id.currency_id
             res[line.id] = cur_obj.round(cr, uid, cur, res[line.id])
         return res
 
     _columns = {
-        'repair_id': fields.many2one('mrp.repair', 'Repair Order Reference', required=True, ondelete='cascade', select=True),
+        'servicemc_id': fields.many2one('mrp.servicemc', 'servicemc Order Reference', required=True, ondelete='cascade', select=True),
         'name': fields.char('Description', size=64, select=True,required=True),
         'product_id': fields.many2one('product.product', 'Product'),
         'product_uom_qty': fields.float('Quantity', digits_compute= dp.get_precision('Product Unit of Measure'), required=True),
         'price_unit': fields.float('Unit Price', required=True),
         'product_uom': fields.many2one('product.uom', 'Product Unit of Measure', required=True),
         'price_subtotal': fields.function(_amount_line, string='Subtotal',digits_compute= dp.get_precision('Account')),
-        'tax_id': fields.many2many('account.tax', 'repair_fee_line_tax', 'repair_fee_line_id', 'tax_id', 'Taxes'),
+        'tax_id': fields.many2many('account.tax', 'servicemc_fee_line_tax', 'servicemc_fee_line_id', 'tax_id', 'Taxes'),
         'invoice_line_id': fields.many2one('account.invoice.line', 'Invoice Line', readonly=True),
         'to_invoice': fields.boolean('To Invoice'),
         'invoiced': fields.boolean('Invoiced',readonly=True),
@@ -775,5 +769,5 @@ class mrp_repair_fee(osv.osv, ProductChangeMixin):
         'to_invoice': lambda *a: True,
     }
 
-mrp_repair_fee()
+mrp_servicemc_fee()
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

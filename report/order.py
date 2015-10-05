@@ -30,16 +30,16 @@ class order(report_sxw.rml_parse):
             'total': self.total,
         })
 
-    def total(self, repair):
+    def total(self, servicemc):
         total = 0.0
-        for operation in repair.operations:
+        for operation in servicemc.operations:
            total += operation.price_subtotal
-        for fee in repair.fees_lines:
+        for fee in servicemc.fees_lines:
            total += fee.price_subtotal
-        total = total + repair.amount_tax
+        total = total + servicemc.amount_tax
         return total
 
-report_sxw.report_sxw('report.repair.order','mrp.repair','addons/mrp_repair/report/order.rml',parser=order)
+report_sxw.report_sxw('report.servicemc.order','mrp.servicemc','addons/mrp_servicemc/report/order.rml',parser=order)
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
 

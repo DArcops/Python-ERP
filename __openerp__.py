@@ -21,11 +21,11 @@
 
 
 {
-    'name': 'Repairs Management',
-    'version': '1.0',
+    'name': 'Ordenes de Servicio',
+    'version': '2.0',
     'category': 'Manufacturing',
     'description': """
-The aim is to have a complete module to manage all products repairs.
+The aim is to have a complete module to manage all products servicemcs.
 ====================================================================
 
 The following topics should be covered by this module:
@@ -34,30 +34,30 @@ The following topics should be covered by this module:
     * Impact for stocks
     * Invoicing (products and/or services)
     * Warranty concept
-    * Repair quotation report
+    * servicemc quotation report
     * Notes for the technician and for the final customer
 """,
-    'author': 'OpenERP SA',
-    'images': ['images/repair_order.jpeg'],
-    'depends': ['mrp', 'sale', 'account'],
+    'author': 'Grupo de desarrollo MC',
+    'images': ['images/servicemc_order.jpeg'],
+    'depends': ['mrp', 'sale', 'account','hr','fleet'],
     'data': [
         'security/ir.model.access.csv',
-        'security/mrp_repair_security.xml',
-        'mrp_repair_data.xml',
-        'mrp_repair_sequence.xml',
-        'wizard/mrp_repair_cancel_view.xml',
-        'wizard/mrp_repair_make_invoice_view.xml',
-        'mrp_repair_view.xml',
-        'mrp_repair_workflow.xml',
-        'mrp_repair_report.xml',
+        'security/mrp_servicemc_security.xml',
+        'mrp_servicemc_data.xml',
+        'mrp_servicemc_sequence.xml',
+        'wizard/mrp_servicemc_cancel_view.xml',
+        'wizard/mrp_servicemc_make_invoice_view.xml',
+        'mrp_servicemc_view.xml',
+        'mrp_servicemc_workflow.xml',
+        'mrp_servicemc_report.xml',
     ],
-    'demo': ['mrp_repair_demo.yml'],
-    'test': ['test/test_mrp_repair_noneinv.yml',
-             'test/test_mrp_repair_b4inv.yml',
-             'test/test_mrp_repair_afterinv.yml',
-             'test/test_mrp_repair_cancel.yml',
-             'test/mrp_repair_report.yml',
-             'test/test_mrp_repair_fee.yml',
+    'demo': ['mrp_servicemc_demo.yml'],
+    'test': ['test/test_mrp_servicemc_noneinv.yml',
+             'test/test_mrp_servicemc_b4inv.yml',
+             'test/test_mrp_servicemc_afterinv.yml',
+             'test/test_mrp_servicemc_cancel.yml',
+             'test/mrp_servicemc_report.yml',
+             'test/test_mrp_servicemc_fee.yml',
     ],
     'installable': True,
     'auto_install': False,

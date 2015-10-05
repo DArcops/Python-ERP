@@ -22,12 +22,12 @@
 from openerp.osv import osv,fields
 from openerp.tools.translate import _
 
-class repair_cancel(osv.osv_memory):
-    _name = 'mrp.repair.cancel'
-    _description = 'Cancel Repair'
+class servicemc_cancel(osv.osv_memory):
+    _name = 'mrp.servicemc.cancel'
+    _description = 'Cancel servicemc'
 
-    def cancel_repair(self, cr, uid, ids, context=None):
-        """ Cancels the repair
+    def cancel_servicemc(self, cr, uid, ids, context=None):
+        """ Cancels the servicemc
         @param self: The object pointer.
         @param cr: A database cursor
         @param uid: ID of the user currently logged in
@@ -39,14 +39,14 @@ class repair_cancel(osv.osv_memory):
             context = {}
         record_id = context and context.get('active_id', False) or False
         assert record_id, _('Active ID not Found')
-        repair_order_obj = self.pool.get('mrp.repair')
-        repair_line_obj = self.pool.get('mrp.repair.line')
-        repair_order = repair_order_obj.browse(cr, uid, record_id, context=context)
+        servicemc_order_obj = self.pool.get('mrp.servicemc')
+        servicemc_line_obj = self.pool.get('mrp.servicemc.line')
+        servicemc_order = servicemc_order_obj.browse(cr, uid, record_id, context=context)
 
-        if repair_order.invoiced or repair_order.invoice_method == 'none':
-            repair_order_obj.action_cancel(cr, uid, [record_id], context=context)
+        if servicemc_order.invoiced or servicemc_order.invoice_method == 'none':
+            servicemc_order_obj.action_cancel(cr, uid, [record_id], context=context)
         else:
-            raise osv.except_osv(_('Warning!'),_('Repair order is not invoiced.'))
+            raise osv.except_osv(_('Warning!'),_('servicemc order is not invoiced.'))
 
         return {'type': 'ir.actions.act_window_close'}
 
@@ -60,19 +60,19 @@ class repair_cancel(osv.osv_memory):
         """
         if context is None:
             context = {}
-        res = super(repair_cancel, self).fields_view_get(cr, uid, view_id=view_id, view_type=view_type, context=context, toolbar=toolbar,submenu=False)
+        res = super(servicemc_cancel, self).fields_view_get(cr, uid, view_id=view_id, view_type=view_type, context=context, toolbar=toolbar,submenu=False)
         record_id = context and context.get('active_id', False) or False
         active_model = context.get('active_model')
 
-        if not record_id or (active_model and active_model != 'mrp.repair'):
+        if not record_id or (active_model and active_model != 'mrp.servicemc'):
             return res
 
-        repair_order = self.pool.get('mrp.repair').browse(cr, uid, record_id, context=context)
-        if not repair_order.invoiced:
+        servicemc_order = self.pool.get('mrp.servicemc').browse(cr, uid, record_id, context=context)
+        if not servicemc_order.invoiced:
             res['arch'] = """
-                <form string="Cancel Repair" version="7.0">
+                <form string="Cancel servicemc" version="7.0">
                     <header>
-                        <button name="cancel_repair" string="_Yes" type="object" class="oe_highlight"/>
+                        <button name="cancel_servicemc" string="_Yes" type="object" class="oe_highlight"/>
                         or
                         <button string="Cancel" class="oe_link" special="cancel"/>
                     </header>
@@ -81,7 +81,7 @@ class repair_cancel(osv.osv_memory):
             """
         return res
 
-repair_cancel()
+servicemc_cancel()
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
 
